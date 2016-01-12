@@ -29,7 +29,7 @@ end
 
 last_lock = first_unblank = Time.now
 
-fork do
+Thread.fork do
   loop do
     delta = Time.now - first_unblank
     File.open(CURRENT_TIME_FILE, 'w') { |file| file.puts("#{time_delta_str(delta)}") }
