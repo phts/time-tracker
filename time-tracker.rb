@@ -49,12 +49,15 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
     now = Time.now
     if now.day != last_lock.day # a new day started
       date_str = first_unblank.strftime('%d.%m')
-      first_unblank_str = first_unblank.strftime('%H:%M')
       last_lock_str = last_lock.strftime('%H:%M')
       delta_str = time_delta_str(last_lock, first_unblank)
-      File.open(REPORT_FILE, 'a') { |file| file.puts("#{date_str}\tStarted: #{first_unblank_str}\tFinished: #{last_lock_str}\tDelta: #{delta_str}") }
 
-      first_unblank = Time.now
+      first_unblank = now
+      first_unblank_str = first_unblank.strftime('%H:%M')
+      File.open(REPORT_FILE, 'a') do |file|
+        file.puts("\tFinished: #{last_lock_str}\tDelta: #{delta_str}")
+        file.write("#{date_str}\tStarted: #{first_unblank_str}")
+      end
     end
   end
 end
