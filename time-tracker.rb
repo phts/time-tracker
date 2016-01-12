@@ -1,20 +1,39 @@
 #!/usr/bin/env ruby
 
-REPORT_FILE = ARGV[0]
-unless REPORT_FILE
-  puts 'An output file should be specified'
+require 'optparse'
+
+options = OptionParser.new do |opts|
+  opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
+
+  opts.on('--genmon', 'Print current progress for xfce4-genmon-plugin') do
+    @genmon = true
+  end
+
+  opts.on( '-h', '--help', 'Show this message' ) do
+    puts opts
+    exit
+  end
+end
+
+begin
+  options.parse!
+rescue OptionParser::InvalidOption
+  puts options
   exit 1
 end
 
-XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
-TEAMVIEWER_PROC = 'TeamViewer_Desk'
+REPORT_FILE = ARGV[-1]
+unless REPORT_FILE
+  puts options
+  exit 1
+end
+
 CURRENT_TIME_FILE = "#{REPORT_FILE}.current"
 REFRESH_CURRENT_TIME_INTERVAL = 59
 WORKING_DAY_IN_HOURS = 8
 WORKING_DAY_IN_SECONDS = WORKING_DAY_IN_HOURS*3600
-NOTIFICATION = 'Go home! :)'
 
-if ARGV.include?('--genmon')
+if @genmon
   current_time_str = File.read(CURRENT_TIME_FILE).strip
   spl_time = current_time_str.split(':').map{|s| s.to_i}
   current_time_sec = spl_time[0]*3600 + spl_time[1]*60 + spl_time[2]
@@ -22,6 +41,10 @@ if ARGV.include?('--genmon')
   puts "<bar>#{progress}</bar><tool>#{current_time_str}</tool>"
   exit
 end
+
+XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
+TEAMVIEWER_PROC = 'TeamViewer_Desk'
+NOTIFICATION = 'Go home! :)'
 
 def teamviewer_session?
   `ps cax | grep #{TEAMVIEWER_PROC}` != ''
