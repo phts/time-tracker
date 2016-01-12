@@ -14,6 +14,15 @@ WORKING_DAY_IN_HOURS = 8
 WORKING_DAY_IN_SECONDS = WORKING_DAY_IN_HOURS*3600
 NOTIFICATION = 'Go home! :)'
 
+if ARGV.include?('--genmon')
+  current_time_str = File.read(CURRENT_TIME_FILE).strip
+  spl_time = current_time_str.split(':').map{|s| s.to_i}
+  current_time_sec = spl_time[0]*3600 + spl_time[1]*60 + spl_time[2]
+  progress = 100 * current_time_sec / WORKING_DAY_IN_SECONDS
+  puts "<bar>#{progress}</bar><tool>#{current_time_str}</tool>"
+  exit
+end
+
 def teamviewer_session?
   `ps cax | grep #{TEAMVIEWER_PROC}` != ''
 end
