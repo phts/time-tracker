@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 REPORT_FILE = ARGV[0]
 unless REPORT_FILE
