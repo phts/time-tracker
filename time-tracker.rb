@@ -56,7 +56,7 @@ def time_delta_str(t1_or_delta, t2 = nil)
 end
 
 def notify(text)
-  `zenity --info --text="#{text}"`
+  `notify-send -u critical -i go-home "#{text}"`
 end
 
 last_lock = first_unblank = Time.now
