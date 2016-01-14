@@ -73,11 +73,17 @@ Thread.fork do
 end
 
 IO.popen(XSCREENSAVER_COMMAND).each do |line|
-  next if teamviewer_session?
   line = line.chomp
   if line['LOCK']
-    last_lock = Time.now
+    unless teamviewer_session? || @was_unlocked_by_teamviewer
+      last_lock = Time.now
+    end
+    @was_unlocked_by_teamviewer = nil
   elsif line['UNBLANK']
+    if teamviewer_session?
+      @was_unlocked_by_teamviewer = true
+      next
+    end
     now = Time.now
     if now.day != last_lock.day # a new day started
       last_lock_str = last_lock.strftime('%H:%M')
