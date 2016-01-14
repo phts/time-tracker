@@ -59,7 +59,24 @@ def notify(text)
   `notify-send -i go-home -t 7200000 "#{text}"`
 end
 
+def print_started(first_unblank)
+  first_unblank_str = first_unblank.strftime('%H:%M')
+  date_str = first_unblank.strftime('%d.%m')
+  File.open(REPORT_FILE, 'a') do |file|
+    file.write("#{date_str}\tStarted: #{first_unblank_str}\t")
+  end
+end
+
+def print_finished(first_unblank, last_lock)
+  last_lock_str = last_lock.strftime('%H:%M')
+  delta_str = time_delta_str(last_lock, first_unblank)
+  File.open(REPORT_FILE, 'a') do |file|
+    file.puts("Finished: #{last_lock_str}\tDelta: #{delta_str}")
+  end
+end
+
 last_lock = first_unblank = Time.now
+print_started(first_unblank)
 
 Thread.fork do
   loop do
@@ -86,16 +103,9 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
     end
     now = Time.now
     if now.day != last_lock.day # a new day started
-      last_lock_str = last_lock.strftime('%H:%M')
-      delta_str = time_delta_str(last_lock, first_unblank)
-
+      print_finished(first_unblank, last_lock)
       first_unblank = now
-      first_unblank_str = first_unblank.strftime('%H:%M')
-      date_str = first_unblank.strftime('%d.%m')
-      File.open(REPORT_FILE, 'a') do |file|
-        file.puts("\tFinished: #{last_lock_str}\tDelta: #{delta_str}")
-        file.write("#{date_str}\tStarted: #{first_unblank_str}")
-      end
+      print_started(first_unblank)
     end
   end
 end
