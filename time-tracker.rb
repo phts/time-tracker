@@ -96,7 +96,9 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       last_lock = Time.now
     end
     @was_unlocked_by_teamviewer = nil
+    @was_locked = true
   elsif line['UNBLANK']
+    next unless @was_locked
     if teamviewer_session?
       @was_unlocked_by_teamviewer = true
       next
@@ -107,5 +109,6 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       first_unblank = now
       print_started(first_unblank)
     end
+    @was_locked = nil
   end
 end
