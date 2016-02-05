@@ -46,6 +46,12 @@ XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
 TEAMVIEWER_PROC = 'TeamViewer_Desk'
 NOTIFICATION = 'Go home! :)'
 
+class Time
+  def week_number
+    self.strftime('%W').to_i
+  end
+end
+
 def teamviewer_session?
   `ps cax | grep #{TEAMVIEWER_PROC}` != ''
 end
@@ -69,15 +75,19 @@ def print_started(first_unblank)
   end
 end
 
-def print_finished(first_unblank, last_lock)
+def print_finished(first_unblank, last_lock, total_per_week)
   last_lock_str = last_lock.strftime('%H:%M')
   delta_str = time_delta_str(last_lock, first_unblank)
+  total_per_week_str = time_delta_str(total_per_week)
   File.open(REPORT_FILE, 'a') do |file|
-    file.puts("Finished: #{last_lock_str}\tDelta: #{delta_str}")
+    file.puts("Finished: #{last_lock_str}\tDelta: #{delta_str}\tTotal per week: #{total_per_week_str}")
   end
 end
 
 last_lock = first_unblank = Time.now
+current_week = last_lock.week_number
+total_per_week = 0
+
 print_started(first_unblank)
 
 Thread.fork do
@@ -107,9 +117,14 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
     end
     now = Time.now
     if now.day != last_lock.day # a new day started
-      print_finished(first_unblank, last_lock)
+      total_per_week += last_lock - first_unblank
+      print_finished(first_unblank, last_lock, total_per_week)
       first_unblank = now
       print_started(first_unblank)
+    end
+    if now.week_number != current_week
+      total_per_week = 0
+      current_week = now.week_number
     end
     @was_locked = nil
   end
