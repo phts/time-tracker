@@ -9,6 +9,10 @@ options = OptionParser.new do |opts|
     @genmon = true
   end
 
+  opts.on('--verbose', 'Print verbose information') do
+    @verbose = true
+  end
+
   opts.on( '-h', '--help', 'Show this message' ) do
     puts opts
     exit
@@ -84,6 +88,11 @@ def print_finished(first_unblank, last_lock, total_per_week)
   end
 end
 
+def verbose(text)
+  return unless @verbose
+  puts text
+end
+
 last_lock = first_unblank = Time.now
 current_week = last_lock.week_number
 total_per_week = 0
@@ -103,9 +112,12 @@ end
 
 IO.popen(XSCREENSAVER_COMMAND).each do |line|
   line = line.chomp
+  verbose "#{line.split.first} #{Time.now}"
+  verbose "teamviewer_session? == #{teamviewer_session?} || @was_unlocked_by_teamviewer == #{@was_unlocked_by_teamviewer.inspect} || @was_locked == #{@was_locked.inspect}"
   if line['LOCK']
     unless teamviewer_session? || @was_unlocked_by_teamviewer
       last_lock = Time.now
+      verbose "last_lock = #{last_lock}"
     end
     @was_unlocked_by_teamviewer = nil
     @was_locked = true
@@ -121,10 +133,13 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       print_finished(first_unblank, last_lock, total_per_week)
       first_unblank = now
       print_started(first_unblank)
+      verbose 'new day'
+      verbose "first_unblank = #{first_unblank}"
     end
     if now.week_number != current_week
       total_per_week = 0
       current_week = now.week_number
+      verbose 'new week'
     end
     @was_locked = nil
   end
