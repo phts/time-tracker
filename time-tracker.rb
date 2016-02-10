@@ -93,15 +93,15 @@ def verbose(text)
   puts text
 end
 
-last_lock = first_unblank = Time.now
-current_week = last_lock.week_number
-total_per_week = 0
+@last_lock = @first_unblank = Time.now
+@current_week = @last_lock.week_number
+@total_per_week = 0
 
-print_started(first_unblank)
+print_started(@first_unblank)
 
 Thread.fork do
   loop do
-    delta = Time.now - first_unblank
+    delta = Time.now - @first_unblank
     File.open(CURRENT_TIME_FILE, 'w') { |file| file.puts("#{time_delta_str(delta)}") }
     if delta >= WORKING_DAY_IN_SECONDS && delta < WORKING_DAY_IN_SECONDS+REFRESH_CURRENT_TIME_INTERVAL
       notify(NOTIFICATION)
@@ -116,8 +116,8 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
   verbose "teamviewer_session? == #{teamviewer_session?} || @was_unlocked_by_teamviewer == #{@was_unlocked_by_teamviewer.inspect} || @was_locked == #{@was_locked.inspect}"
   if line['LOCK']
     unless teamviewer_session? || @was_unlocked_by_teamviewer
-      last_lock = Time.now
-      verbose "last_lock = #{last_lock}"
+      @last_lock = Time.now
+      verbose "last_lock = #{@last_lock}"
     end
     @was_unlocked_by_teamviewer = nil
     @was_locked = true
@@ -128,17 +128,17 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       next
     end
     now = Time.now
-    if now.day != last_lock.day # a new day started
-      total_per_week += last_lock - first_unblank
-      print_finished(first_unblank, last_lock, total_per_week)
-      first_unblank = now
-      print_started(first_unblank)
+    if now.day != @last_lock.day # a new day started
+      @total_per_week += @last_lock - @first_unblank
+      print_finished(@first_unblank, @last_lock, @total_per_week)
+      @first_unblank = now
+      print_started(@first_unblank)
       verbose 'new day'
-      verbose "first_unblank = #{first_unblank}"
+      verbose "first_unblank = #{@first_unblank}"
     end
-    if now.week_number != current_week
-      total_per_week = 0
-      current_week = now.week_number
+    if now.week_number != @current_week
+      @total_per_week = 0
+      @current_week = now.week_number
       verbose 'new week'
     end
     @was_locked = nil
