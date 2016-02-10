@@ -5,17 +5,17 @@ require 'optparse'
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
 
+  opts.on( '-h', '--help', 'Show this message' ) do
+    puts opts
+    exit
+  end
+
   opts.on('--genmon', 'Print current progress for xfce4-genmon-plugin') do
     @genmon = true
   end
 
   opts.on('--verbose', 'Print verbose information') do
     @verbose = true
-  end
-
-  opts.on( '-h', '--help', 'Show this message' ) do
-    puts opts
-    exit
   end
 end
 
