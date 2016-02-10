@@ -5,6 +5,10 @@ require 'optparse'
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
 
+  opts.on('-d', '--dynamic', 'Use dynamic working day limit. Not supported for --genmon.') do
+    @dynamic = true
+  end
+
   opts.on( '-h', '--help', 'Show this message' ) do
     puts opts
     exit
@@ -36,6 +40,7 @@ CURRENT_TIME_FILE = "#{REPORT_FILE}.current"
 REFRESH_CURRENT_TIME_INTERVAL = 59
 WORKING_DAY_IN_HOURS = 8
 WORKING_DAY_IN_SECONDS = WORKING_DAY_IN_HOURS*3600
+WORKING_LIMIT_PER_WEEK = WORKING_DAY_IN_SECONDS*5
 
 if @genmon
   current_time_str = File.read(CURRENT_TIME_FILE).strip
@@ -93,6 +98,13 @@ def verbose(text)
   puts text
 end
 
+def today_limit
+  return WORKING_DAY_IN_SECONDS unless @dynamic
+
+  days_to_weekend = 6 - @first_unblank.wday
+  (WORKING_LIMIT_PER_WEEK-@total_per_week).round / days_to_weekend
+end
+
 @last_lock = @first_unblank = Time.now
 @current_week = @last_lock.week_number
 @total_per_week = 0
@@ -103,7 +115,7 @@ Thread.fork do
   loop do
     delta = Time.now - @first_unblank
     File.open(CURRENT_TIME_FILE, 'w') { |file| file.puts("#{time_delta_str(delta)}") }
-    if delta >= WORKING_DAY_IN_SECONDS && delta < WORKING_DAY_IN_SECONDS+REFRESH_CURRENT_TIME_INTERVAL
+    if delta >= (lim=today_limit) && delta < lim+REFRESH_CURRENT_TIME_INTERVAL
       notify(NOTIFICATION)
     end
     sleep REFRESH_CURRENT_TIME_INTERVAL
