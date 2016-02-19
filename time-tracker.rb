@@ -69,7 +69,7 @@ def time_delta_str(t1_or_delta, t2 = nil)
   delta = t2.nil? ? t1_or_delta : t1_or_delta - t2
   mm, ss = delta.divmod(60)
   hh, mm = mm.divmod(60)
-  sprintf("%d:%02d:%02d", hh, mm, ss)
+  sprintf("%02d:%02d", hh, mm)
 end
 
 def notify(text)
