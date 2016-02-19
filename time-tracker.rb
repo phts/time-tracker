@@ -80,7 +80,7 @@ def print_started(first_unblank)
   first_unblank_str = first_unblank.strftime('%H:%M')
   date_str = first_unblank.strftime('%d.%m')
   File.open(REPORT_FILE, 'a') do |file|
-    file.write("#{date_str}\tStarted: #{first_unblank_str}\t")
+    file.write("#{date_str}    Started: #{first_unblank_str}    ")
   end
 end
 
@@ -89,7 +89,7 @@ def print_finished(first_unblank, last_lock, total_per_week)
   delta_str = time_delta_str(last_lock, first_unblank)
   total_per_week_str = time_delta_str(total_per_week)
   File.open(REPORT_FILE, 'a') do |file|
-    file.puts("Finished: #{last_lock_str}\tDelta: #{delta_str}\tTotal per week: #{total_per_week_str}")
+    file.puts("Finished: #{last_lock_str}    Delta: #{delta_str}    Total per week: #{total_per_week_str}")
   end
 end
 
