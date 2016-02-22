@@ -45,7 +45,7 @@ WORKING_LIMIT_PER_WEEK = WORKING_DAY_IN_SECONDS*5
 if @genmon
   current_time_str = File.read(CURRENT_TIME_FILE).strip
   spl_time = current_time_str.split(':').map{|s| s.to_i}
-  current_time_sec = spl_time[0]*3600 + spl_time[1]*60 + spl_time[2]
+  current_time_sec = spl_time[0]*3600 + spl_time[1]*60
   progress = 100 * current_time_sec / WORKING_DAY_IN_SECONDS
   puts "<bar>#{progress}</bar><tool>#{current_time_str}</tool>"
   exit
