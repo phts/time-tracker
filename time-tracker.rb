@@ -47,7 +47,11 @@ if @genmon
   spl_time = current_time_str.split(':').map{|s| s.to_i}
   current_time_sec = spl_time[0]*3600 + spl_time[1]*60
   progress = 100 * current_time_sec / WORKING_DAY_IN_SECONDS
-  puts "<bar>#{progress}</bar><tool>#{current_time_str}</tool>"
+
+  started_time = Time.now - current_time_sec
+  until_time = Time.now + (WORKING_DAY_IN_SECONDS-current_time_sec)
+  tooltip = "Current:\t#{current_time_str}\n\nStarted:\t#{ started_time.strftime('%H:%M') }\nUntil:\t#{ until_time.strftime('%H:%M') }"
+  puts "<bar>#{progress}</bar><tool>#{tooltip}</tool>"
   exit
 end
 
