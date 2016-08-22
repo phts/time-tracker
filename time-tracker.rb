@@ -25,7 +25,7 @@ end
 
 begin
   options.parse!
-rescue OptionParser::InvalidOption
+rescue OptionParser::ParseError
   puts options
   exit 1
 end
