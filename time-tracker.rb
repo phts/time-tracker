@@ -1,12 +1,27 @@
 #!/usr/bin/env ruby
 
 require 'optparse'
+require 'time'
+
+def to_seconds(time_str)
+  spl_time = time_str.split(':').map{|s| s.to_i}
+  raise ArgumentError.new('Time format should be HH:MM') unless spl_time.size == 2
+  spl_time[0]*3600 + spl_time[1]*60
+end
 
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
 
   opts.on('-d', '--dynamic', 'Use dynamic working day limit. Not supported for --genmon.') do
     @dynamic = true
+  end
+
+  opts.on('--initial-started=time', 'Set initial "Started" time (HH:MM)') do |time|
+    @initial_first_unblank = Time.strptime(time, '%H:%M')
+  end
+
+  opts.on('--initial-total-per-week=time', 'Set initial "Total per week" time (HH:MM)') do |time|
+    @initial_total_per_week = to_seconds(time)
   end
 
   opts.on( '-h', '--help', 'Show this message' ) do
@@ -44,8 +59,7 @@ WORKING_LIMIT_PER_WEEK = WORKING_DAY_IN_SECONDS*5
 
 if @genmon
   current_time_str = File.read(CURRENT_TIME_FILE).strip
-  spl_time = current_time_str.split(':').map{|s| s.to_i}
-  current_time_sec = spl_time[0]*3600 + spl_time[1]*60
+  current_time_sec = to_seconds(current_time_str)
   progress = 100 * current_time_sec / WORKING_DAY_IN_SECONDS
 
   started_time = Time.now - current_time_sec
@@ -109,9 +123,10 @@ def today_limit
   (WORKING_LIMIT_PER_WEEK-@total_per_week).round / days_to_weekend
 end
 
-@last_lock = @first_unblank = Time.now
+@last_lock = Time.now
+@first_unblank = @initial_first_unblank || @last_lock
 @current_week = @last_lock.week_number
-@total_per_week = 0
+@total_per_week = @initial_total_per_week || 0
 
 print_started(@first_unblank)
 
