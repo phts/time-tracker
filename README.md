@@ -41,3 +41,8 @@ Additionally the script can be used with [dnschneid/xfce4-genmon-plugin](https:/
 ## Notification
 
 There is a notification if you have already been 8 hours at the office - it's time to go home.
+
+## TeamViewer
+
+This script doesn't treat TeamViewer sessions as working time.
+So any screen lock/unlock under TeamViewer will be ignored and will not be taken into account.
