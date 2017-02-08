@@ -6,7 +6,7 @@ A simple script to track how much time you spend near the computer at the office
 
 The script uses `xscreensaver-command -watch` output so `xscreensaver` is required as a screen locking framework.
 Notifications are shown by `notify-send`.
-And [Ruby](https://www.ruby-lang.org/en/) (tested on v2.2.3) is needed to able to run the script.
+And [Ruby](https://www.ruby-lang.org/en/) (tested on v2.2.3) is needed to be able to run the script.
 
 Also it assumes that you do not work at nights and do not turn off your PC.
 
