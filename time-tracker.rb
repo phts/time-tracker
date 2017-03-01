@@ -16,12 +16,8 @@ options = OptionParser.new do |opts|
     @dynamic = true
   end
 
-  opts.on('--initial-started=time', 'Set initial "Started" time (HH:MM)') do |time|
-    @initial_first_unblank = Time.strptime(time, '%H:%M')
-  end
-
-  opts.on('--initial-total-per-week=time', 'Set initial "Total per week" time (HH:MM)') do |time|
-    @initial_total_per_week = to_seconds(time)
+  opts.on('--genmon', 'Print current progress for xfce4-genmon-plugin') do
+    @genmon = true
   end
 
   opts.on( '-h', '--help', 'Show this message' ) do
@@ -29,8 +25,12 @@ options = OptionParser.new do |opts|
     exit
   end
 
-  opts.on('--genmon', 'Print current progress for xfce4-genmon-plugin') do
-    @genmon = true
+  opts.on('--initial-started=time', 'Set initial "Started" time (HH:MM)') do |time|
+    @initial_first_unblank = Time.strptime(time, '%H:%M')
+  end
+
+  opts.on('--initial-total-per-week=time', 'Set initial "Total per week" time (HH:MM)') do |time|
+    @initial_total_per_week = to_seconds(time)
   end
 
   opts.on('--verbose', 'Print verbose information') do
