@@ -33,6 +33,10 @@ options = OptionParser.new do |opts|
     @initial_total_per_week = to_seconds(time)
   end
 
+  opts.on('-m', '--message=text', 'Set a message of the "Go home" notification') do |text|
+    @message = text
+  end
+
   opts.on('--verbose', 'Print verbose information') do
     @verbose = true
   end
@@ -71,7 +75,7 @@ end
 
 XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
 TEAMVIEWER_PROC = 'TeamViewer_Desk'
-NOTIFICATION = 'Go home! :)'
+NOTIFICATION = @message || 'Go home!'
 
 class Time
   def week_number
