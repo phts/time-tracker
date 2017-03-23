@@ -20,9 +20,9 @@ To run the script from terminal emulator:
 
 It generates a report file (in this case *~/time.txt*), for example:
 
-    11.01    Started: 09:34    Finished: 17:35    Delta: 08:00    Total per week: 08:16
-    12.01    Started: 10:35    Finished: 18:29    Delta: 07:54    Total per week: 16:31
-    13.01    Started: 09:01    Finished: 17:20    Delta: 08:19    Total per week: 24:35
+    11.01    Started: 09:34    Finished: 17:35    Delta: 08:00    Total per week: 08:00
+    12.01    Started: 10:35    Finished: 18:29    Delta: 07:54    Total per week: 15:54
+    13.01    Started: 09:01    Finished: 17:20    Delta: 08:19    Total per week: 24:13
 
 Also it creates a file (*~/time.txt.current*) which contains working time for the current day.
 You can use this file wherever you want.
