@@ -127,6 +127,14 @@ def today_limit
   (WORKING_LIMIT_PER_WEEK-@total_per_week).round / days_to_weekend
 end
 
+def new_day?(date)
+  date.strftime('%Y-%m-%d') != @last_lock.strftime('%Y-%m-%d')
+end
+
+def new_week?(date)
+  date.week_number != @current_week
+end
+
 @last_lock = Time.now
 @first_unblank = @initial_first_unblank || @last_lock
 @current_week = @last_lock.week_number
@@ -163,7 +171,7 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       next
     end
     now = Time.now
-    if now.day != @last_lock.day # a new day started
+    if new_day?(now)
       @total_per_week += @last_lock - @first_unblank
       print_finished(@first_unblank, @last_lock, @total_per_week)
       @first_unblank = now
@@ -171,7 +179,7 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       verbose 'new day'
       verbose "first_unblank = #{@first_unblank}"
     end
-    if now.week_number != @current_week
+    if new_week?(now)
       @total_per_week = 0
       @current_week = now.week_number
       verbose 'new week'
