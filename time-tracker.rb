@@ -124,7 +124,7 @@ def today_limit
   return WORKING_DAY_IN_SECONDS unless @dynamic
 
   days_to_weekend = 6 - @first_unblank.wday
-  (WORKING_LIMIT_PER_WEEK-@total_per_week).round / days_to_weekend
+  (@limit_per_week-@total_per_week).round / days_to_weekend
 end
 
 def new_day?(date)
@@ -135,10 +135,32 @@ def new_week?(date)
   date.week_number != @current_week
 end
 
+def fix_first_week_day
+  days_to_weekend = 6 - @first_unblank.wday
+  @limit_per_week = WORKING_DAY_IN_SECONDS * days_to_weekend
+  verbose "remaining working days of a week = #{@limit_per_week/WORKING_DAY_IN_SECONDS}"
+end
+
+def fix_days_gap
+  days_gap = @first_unblank.wday - @last_lock.wday - 1
+  @limit_per_week = @limit_per_week - WORKING_DAY_IN_SECONDS * days_gap
+  if days_gap > 0
+    verbose "skip day gap: #{days_gap}"
+    verbose "actual working days of a week = #{@limit_per_week/WORKING_DAY_IN_SECONDS}"
+  end
+end
+
 @last_lock = Time.now
 @first_unblank = @initial_first_unblank || @last_lock
 @current_week = @last_lock.week_number
-@total_per_week = @initial_total_per_week || 0
+
+if @initial_total_per_week
+  @total_per_week = @initial_total_per_week
+  @limit_per_week = WORKING_LIMIT_PER_WEEK
+else
+  @total_per_week = 0
+  fix_first_week_day()
+end
 
 print_started(@first_unblank)
 
@@ -176,12 +198,14 @@ IO.popen(XSCREENSAVER_COMMAND).each do |line|
       print_finished(@first_unblank, @last_lock, @total_per_week)
       @first_unblank = now
       print_started(@first_unblank)
+      fix_days_gap() unless new_week?(now)
       verbose 'new day'
       verbose "first_unblank = #{@first_unblank}"
     end
     if new_week?(now)
       @total_per_week = 0
       @current_week = now.week_number
+      fix_first_week_day()
       verbose 'new week'
     end
     @was_locked = nil
