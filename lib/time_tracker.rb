@@ -1,19 +1,20 @@
 require 'time'
+require 'watchable'
 require_relative 'config'
 require_relative 'date_time_utils'
-require_relative 'verbose'
 
 XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
 TEAMVIEWER_PROC = 'TeamViewer_Desk'
 
 class TimeTracker
+  include Watchable
+
   attr_reader :current_time_file
 
   def initialize(report_file, options)
     @report_file = report_file
     @notification = options[:notification] || 'Go home!'
     @dynamic = options[:dynamic]
-    @verbose = Verbose.new(options[:verbose])
 
     @last_lock = Time.now
     @first_unblank = options[:initial_first_unblank] || @last_lock
@@ -33,12 +34,21 @@ class TimeTracker
     print_started(@first_unblank)
     IO.popen(XSCREENSAVER_COMMAND).each do |line|
       line = line.chomp
-      @verbose.log "#{line.split.first} #{Time.now}"
-      @verbose.log "teamviewer_session? == #{teamviewer_session?} || @was_unlocked_by_teamviewer == #{@was_unlocked_by_teamviewer.inspect} || @was_locked == #{@was_locked.inspect}"
+      now = Time.now
+      fire :new_xscreensaver_command, {
+        command: line.split.first,
+        time: now,
+        teamviewer_session?: teamviewer_session?,
+        was_locked: @was_locked,
+        was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer,
+      }
+
       if line['LOCK']
         unless teamviewer_session? || @was_unlocked_by_teamviewer
-          @last_lock = Time.now
-          @verbose.log "last_lock = #{@last_lock}"
+          @last_lock = now
+          fire :lock, {
+            last_lock: @last_lock
+          }
         end
         @was_unlocked_by_teamviewer = nil
         @was_locked = true
@@ -48,21 +58,21 @@ class TimeTracker
           @was_unlocked_by_teamviewer = true
           next
         end
-        now = Time.now
         if new_day?(now)
           @total_per_week += @last_lock - @first_unblank
           print_finished(@first_unblank, @last_lock, @total_per_week)
           @first_unblank = now
           print_started(@first_unblank)
           fix_days_gap() unless new_week?(now)
-          @verbose.log 'new day'
-          @verbose.log "first_unblank = #{@first_unblank}"
+          fire :new_day, {
+            first_unblank: @first_unblank,
+          }
         end
         if new_week?(now)
           @total_per_week = 0
           @current_week = DateTimeUtils.week_number(now)
           fix_first_week_day()
-          @verbose.log 'new week'
+          fire :new_week
         end
         @was_locked = nil
       end
@@ -127,15 +137,19 @@ class TimeTracker
   def fix_first_week_day
     days_to_weekend = 6 - @first_unblank.wday
     @limit_per_week = WORKING_DAY_IN_SECONDS * days_to_weekend
-    @verbose.log "remaining working days of a week = #{@limit_per_week/WORKING_DAY_IN_SECONDS}"
+    fire :fix_first_week_day, {
+      actual_working_days: @limit_per_week/WORKING_DAY_IN_SECONDS,
+    }
   end
 
   def fix_days_gap
     days_gap = @first_unblank.wday - @last_lock.wday - 1
     @limit_per_week = @limit_per_week - WORKING_DAY_IN_SECONDS * days_gap
     if days_gap > 0
-      @verbose.log "skip day gap: #{days_gap}"
-      @verbose.log "actual working days of a week = #{@limit_per_week/WORKING_DAY_IN_SECONDS}"
+      fire :fix_days_gap, {
+        actual_working_days: @limit_per_week/WORKING_DAY_IN_SECONDS,
+        days_gap: days_gap,
+      }
     end
   end
 end

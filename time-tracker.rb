@@ -56,13 +56,36 @@ time_tracker = TimeTracker.new(REPORT_FILE, {
   initial_first_unblank: @initial_first_unblank,
   initial_total_per_week: @initial_total_per_week,
   notification: @notification,
-  verbose: @verbose,
 })
 
 if @genmon
   require_relative 'lib/genmon'
   puts Genmon.new(time_tracker.current_time_file).progress
   exit
+end
+
+if @verbose
+  time_tracker.on :new_xscreensaver_command do |data|
+    puts "#{data[:command]} #{data[:time]}"
+    puts "teamviewer_session? == #{data[:teamviewer_session?]} || @was_unlocked_by_teamviewer == #{data[:was_unlocked_by_teamviewer].inspect} || @was_locked == #{data[:was_locked].inspect}"
+  end
+  time_tracker.on :lock do |data|
+    puts "last_lock = #{data[:last_lock]}"
+  end
+  time_tracker.on :new_day do |data|
+    puts 'new day'
+    puts "first_unblank = #{@first_unblank}"
+  end
+  time_tracker.on :new_week do
+    puts 'new week'
+  end
+  time_tracker.on :fix_first_week_day do |data|
+    puts "remaining working days of a week = #{data[:actual_working_days]}"
+  end
+  time_tracker.on :fix_days_gap do |data|
+    puts "skip day gap: #{data[:days_gap]}"
+    puts "actual working days of a week = #{data[:actual_working_days]}"
+  end
 end
 
 time_tracker.start_notifications
