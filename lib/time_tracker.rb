@@ -3,8 +3,8 @@ require 'watchable'
 require_relative 'config'
 require_relative 'date_time_utils'
 
-XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'
-TEAMVIEWER_PROC = 'TeamViewer_Desk'
+XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'.freeze
+TEAMVIEWER_PROC = 'TeamViewer_Desk'.freeze
 
 class TimeTracker
   include Watchable
@@ -25,7 +25,7 @@ class TimeTracker
       @limit_per_week = WORKING_LIMIT_PER_WEEK
     else
       @total_per_week = 0
-      fix_first_week_day()
+      fix_first_week_day
     end
     @current_time_file = "#{@report_file}.current"
   end
@@ -35,20 +35,18 @@ class TimeTracker
     IO.popen(XSCREENSAVER_COMMAND).each do |line|
       line = line.chomp
       now = Time.now
-      fire :new_xscreensaver_command, {
-        command: line.split.first,
-        time: now,
-        teamviewer_session?: teamviewer_session?,
-        was_locked: @was_locked,
-        was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer,
-      }
+      fire :new_xscreensaver_command,
+           command: line.split.first,
+           time: now,
+           teamviewer_session?: teamviewer_session?,
+           was_locked: @was_locked,
+           was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer
 
       if line['LOCK']
         unless teamviewer_session? || @was_unlocked_by_teamviewer
           @last_lock = now
-          fire :lock, {
-            last_lock: @last_lock
-          }
+          fire :lock,
+               last_lock: @last_lock
         end
         @was_unlocked_by_teamviewer = nil
         @was_locked = true
@@ -63,15 +61,14 @@ class TimeTracker
           print_finished(@first_unblank, @last_lock, @total_per_week)
           @first_unblank = now
           print_started(@first_unblank)
-          fix_days_gap() unless new_week?(now)
-          fire :new_day, {
-            first_unblank: @first_unblank,
-          }
+          fix_days_gap unless new_week?(now)
+          fire :new_day,
+               first_unblank: @first_unblank
         end
         if new_week?(now)
           @total_per_week = 0
           @current_week = DateTimeUtils.week_number(now)
-          fix_first_week_day()
+          fix_first_week_day
           fire :new_week
         end
         @was_locked = nil
@@ -83,8 +80,11 @@ class TimeTracker
     Thread.fork do
       loop do
         delta = Time.now - @first_unblank
-        File.open(@current_time_file, 'w') { |file| file.puts("#{DateTimeUtils.time_delta_str(delta)}") }
-        if delta >= (lim=today_limit) && delta < lim+REFRESH_CURRENT_TIME_INTERVAL
+        File.open(@current_time_file, 'w') do |file|
+          file.puts(DateTimeUtils.time_delta_str(delta).to_s)
+        end
+        if delta >= (lim = today_limit) &&
+           delta < lim + REFRESH_CURRENT_TIME_INTERVAL
           notify(@notification)
         end
         sleep REFRESH_CURRENT_TIME_INTERVAL
@@ -115,7 +115,9 @@ class TimeTracker
     delta_str = DateTimeUtils.time_delta_str(last_lock, first_unblank)
     total_per_week_str = DateTimeUtils.time_delta_str(total_per_week)
     File.open(@report_file, 'a') do |file|
-      file.puts("Finished: #{last_lock_str}    Delta: #{delta_str}    Total per week: #{total_per_week_str}")
+      file.puts("Finished: #{last_lock_str}    "\
+                "Delta: #{delta_str}    "\
+                "Total per week: #{total_per_week_str}")
     end
   end
 
@@ -123,7 +125,7 @@ class TimeTracker
     return WORKING_DAY_IN_SECONDS unless @dynamic
 
     days_to_weekend = 6 - @first_unblank.wday
-    (@limit_per_week-@total_per_week).round / days_to_weekend
+    (@limit_per_week - @total_per_week).round / days_to_weekend
   end
 
   def new_day?(date)
@@ -137,19 +139,17 @@ class TimeTracker
   def fix_first_week_day
     days_to_weekend = 6 - @first_unblank.wday
     @limit_per_week = WORKING_DAY_IN_SECONDS * days_to_weekend
-    fire :fix_first_week_day, {
-      actual_working_days: @limit_per_week/WORKING_DAY_IN_SECONDS,
-    }
+    fire :fix_first_week_day,
+         actual_working_days: @limit_per_week / WORKING_DAY_IN_SECONDS
   end
 
   def fix_days_gap
     days_gap = @first_unblank.wday - @last_lock.wday - 1
-    @limit_per_week = @limit_per_week - WORKING_DAY_IN_SECONDS * days_gap
-    if days_gap > 0
-      fire :fix_days_gap, {
-        actual_working_days: @limit_per_week/WORKING_DAY_IN_SECONDS,
-        days_gap: days_gap,
-      }
-    end
+    @limit_per_week -= WORKING_DAY_IN_SECONDS * days_gap
+    return unless days_gap > 0
+
+    fire :fix_days_gap,
+         actual_working_days: @limit_per_week / WORKING_DAY_IN_SECONDS,
+         days_gap: days_gap
   end
 end
