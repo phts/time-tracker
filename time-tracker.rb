@@ -78,9 +78,9 @@ if @verbose
   time_tracker.on :lock do |data|
     puts "last_lock = #{data[:last_lock]}"
   end
-  time_tracker.on :new_day do
+  time_tracker.on :new_day do |data|
     puts 'new day'
-    puts "first_unblank = #{@first_unblank}"
+    puts "first_unblank = #{data[:first_unblank]}"
   end
   time_tracker.on :new_week do
     puts 'new week'
