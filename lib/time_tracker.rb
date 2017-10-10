@@ -33,66 +33,84 @@ class TimeTracker
   def run
     print_started(@first_unblank)
     IO.popen(XSCREENSAVER_COMMAND).each do |line|
-      line = line.chomp
-      now = Time.now
-      fire :new_xscreensaver_command,
-           command: line.split.first,
-           time: now,
-           teamviewer_session?: teamviewer_session?,
-           was_locked: @was_locked,
-           was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer
-
-      if line['LOCK']
-        unless teamviewer_session? || @was_unlocked_by_teamviewer
-          @last_lock = now
-          fire :lock,
-               last_lock: @last_lock
-        end
-        @was_unlocked_by_teamviewer = nil
-        @was_locked = true
-      elsif line['UNBLANK']
-        next unless @was_locked
-        if teamviewer_session?
-          @was_unlocked_by_teamviewer = true
-          next
-        end
-        if new_day?(now)
-          @total_per_week += @last_lock - @first_unblank
-          print_finished(@first_unblank, @last_lock, @total_per_week)
-          @first_unblank = now
-          print_started(@first_unblank)
-          fix_days_gap unless new_week?(now)
-          fire :new_day,
-               first_unblank: @first_unblank
-        end
-        if new_week?(now)
-          @total_per_week = 0
-          @current_week = DateTimeUtils.week_number(now)
-          fix_first_week_day
-          fire :new_week
-        end
-        @was_locked = nil
-      end
+      process_line(line.chomp)
     end
   end
 
   def start_notifications
     Thread.fork do
       loop do
-        delta = Time.now - @first_unblank
-        File.open(@current_time_file, 'w') do |file|
-          file.puts(DateTimeUtils.time_delta_str(delta).to_s)
-        end
-        if delta >= (lim = today_limit) &&
-           delta < lim + Config::REFRESH_CURRENT_TIME_INTERVAL
-          notify(@notification)
-        end
+        process_notifications_loop
         sleep Config::REFRESH_CURRENT_TIME_INTERVAL
       end
     end
   end
 
   private
+
+  def process_notifications_loop
+    delta = Time.now - @first_unblank
+    File.open(@current_time_file, 'w') do |file|
+      file.puts(DateTimeUtils.time_delta_str(delta).to_s)
+    end
+    if delta >= (lim = today_limit) &&
+       delta < lim + Config::REFRESH_CURRENT_TIME_INTERVAL
+      notify(@notification)
+    end
+  end
+
+  def process_line(line)
+    fire :new_xscreensaver_command,
+         command: line.split.first,
+         time: Time.now,
+         teamviewer_session?: teamviewer_session?,
+         was_locked: @was_locked,
+         was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer
+
+    if line['LOCK']
+      process_lock
+    elsif line['UNBLANK']
+      process_unblank
+    end
+  end
+
+  def process_lock
+    unless teamviewer_session? || @was_unlocked_by_teamviewer
+      @last_lock = Time.now
+      fire :lock,
+           last_lock: @last_lock
+    end
+    @was_unlocked_by_teamviewer = nil
+    @was_locked = true
+  end
+
+  def process_unblank
+    return unless @was_locked
+    if teamviewer_session?
+      @was_unlocked_by_teamviewer = true
+      return
+    end
+    process_new_day if new_day?(Time.now)
+    process_new_week if new_week?(Time.now)
+    @was_locked = nil
+  end
+
+  def process_new_day
+    @total_per_week += @last_lock - @first_unblank
+    print_finished(@first_unblank, @last_lock, @total_per_week)
+    @first_unblank = Time.now
+    print_started(@first_unblank)
+    fix_days_gap unless new_week?(Time.now)
+    fire :new_day,
+         first_unblank: @first_unblank
+  end
+
+  def process_new_week
+    @total_per_week = 0
+    @current_week = DateTimeUtils.week_number(Time.now)
+    fix_first_week_day
+    fire :new_week
+  end
 
   def teamviewer_session?
     `ps cax | grep #{TEAMVIEWER_PROC}` != ''
