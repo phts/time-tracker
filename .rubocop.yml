@@ -1,6 +1,9 @@
 Style/Documentation:
   Enabled: false
 
+Style/EndOfLine:
+  EnforcedStyle: lf
+
 Style/FormatString:
   Enabled: false
 
