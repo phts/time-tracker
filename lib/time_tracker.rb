@@ -1,10 +1,8 @@
 require 'time'
 require 'watchable'
 require_relative 'config'
+require_relative 'bash_utils'
 require_relative 'date_time_utils'
-
-XSCREENSAVER_COMMAND = 'xscreensaver-command -watch'.freeze
-TEAMVIEWER_PROC = 'TeamViewer_Desk'.freeze
 
 class TimeTracker
   include Watchable
@@ -32,8 +30,8 @@ class TimeTracker
 
   def run
     print_started(@first_unblank)
-    IO.popen(XSCREENSAVER_COMMAND).each do |line|
-      process_line(line.chomp)
+    BashUtils.watch_xscreensaver_command do |line|
+      process_line(line)
     end
   end
 
@@ -55,7 +53,7 @@ class TimeTracker
     end
     if delta >= (lim = today_limit) &&
        delta < lim + Config::REFRESH_CURRENT_TIME_INTERVAL
-      notify(@notification)
+      BashUtils.notify(@notification)
     end
   end
 
@@ -63,7 +61,7 @@ class TimeTracker
     fire :new_xscreensaver_command,
          command: line.split.first,
          time: Time.now,
-         teamviewer_session?: teamviewer_session?,
+         teamviewer_session?: BashUtils.teamviewer_session?,
          was_locked: @was_locked,
          was_unlocked_by_teamviewer: @was_unlocked_by_teamviewer
 
@@ -75,7 +73,7 @@ class TimeTracker
   end
 
   def process_lock
-    unless teamviewer_session? || @was_unlocked_by_teamviewer
+    unless BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer
       @last_lock = Time.now
       fire :lock,
            last_lock: @last_lock
@@ -86,7 +84,7 @@ class TimeTracker
 
   def process_unblank
     return unless @was_locked
-    if teamviewer_session?
+    if BashUtils.teamviewer_session?
       @was_unlocked_by_teamviewer = true
       return
     end
@@ -110,14 +108,6 @@ class TimeTracker
     @current_week = DateTimeUtils.week_number(Time.now)
     fix_first_week_day
     fire :new_week
-  end
-
-  def teamviewer_session?
-    `ps cax | grep #{TEAMVIEWER_PROC}` != ''
-  end
-
-  def notify(text)
-    `notify-send -i go-home -t 7200000 "#{text}"`
   end
 
   def print_started(first_unblank)
