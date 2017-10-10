@@ -22,7 +22,7 @@ class TimeTracker
 
     if options[:initial_total_per_week]
       @total_per_week = options[:initial_total_per_week]
-      @limit_per_week = WORKING_LIMIT_PER_WEEK
+      @limit_per_week = Config::WORKING_LIMIT_PER_WEEK
     else
       @total_per_week = 0
       fix_first_week_day
@@ -84,10 +84,10 @@ class TimeTracker
           file.puts(DateTimeUtils.time_delta_str(delta).to_s)
         end
         if delta >= (lim = today_limit) &&
-           delta < lim + REFRESH_CURRENT_TIME_INTERVAL
+           delta < lim + Config::REFRESH_CURRENT_TIME_INTERVAL
           notify(@notification)
         end
-        sleep REFRESH_CURRENT_TIME_INTERVAL
+        sleep Config::REFRESH_CURRENT_TIME_INTERVAL
       end
     end
   end
@@ -122,7 +122,7 @@ class TimeTracker
   end
 
   def today_limit
-    return WORKING_DAY_IN_SECONDS unless @dynamic
+    return Config::WORKING_DAY_IN_SECONDS unless @dynamic
 
     days_to_weekend = 6 - @first_unblank.wday
     (@limit_per_week - @total_per_week).round / days_to_weekend
@@ -138,18 +138,18 @@ class TimeTracker
 
   def fix_first_week_day
     days_to_weekend = 6 - @first_unblank.wday
-    @limit_per_week = WORKING_DAY_IN_SECONDS * days_to_weekend
+    @limit_per_week = Config::WORKING_DAY_IN_SECONDS * days_to_weekend
     fire :fix_first_week_day,
-         actual_working_days: @limit_per_week / WORKING_DAY_IN_SECONDS
+         actual_working_days: @limit_per_week / Config::WORKING_DAY_IN_SECONDS
   end
 
   def fix_days_gap
     days_gap = @first_unblank.wday - @last_lock.wday - 1
-    @limit_per_week -= WORKING_DAY_IN_SECONDS * days_gap
+    @limit_per_week -= Config::WORKING_DAY_IN_SECONDS * days_gap
     return unless days_gap > 0
 
     fire :fix_days_gap,
-         actual_working_days: @limit_per_week / WORKING_DAY_IN_SECONDS,
+         actual_working_days: @limit_per_week / Config::WORKING_DAY_IN_SECONDS,
          days_gap: days_gap
   end
 end
