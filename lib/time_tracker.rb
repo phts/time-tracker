@@ -10,7 +10,6 @@ class TimeTracker
   attr_reader :current_time_file
 
   def initialize(report_file, options)
-    @report_file = report_file
     @notification = options[:notification] || 'Go home!'
     @dynamic = options[:dynamic]
 
@@ -25,11 +24,12 @@ class TimeTracker
       @total_per_week = 0
       fix_first_week_day
     end
-    @current_time_file = "#{@report_file}.current"
+    @current_time_file = "#{report_file}.current"
   end
 
   def run
-    print_started(@first_unblank)
+    fire :run,
+         first_unblank: @first_unblank
     BashUtils.watch_xscreensaver_command do |line|
       process_line(line)
     end
@@ -95,9 +95,12 @@ class TimeTracker
 
   def process_new_day
     @total_per_week += @last_lock - @first_unblank
-    print_finished(@first_unblank, @last_lock, @total_per_week)
+    fire :before_new_day,
+         first_unblank: @first_unblank,
+         last_lock: @last_lock,
+         total_per_week: @total_per_week
+
     @first_unblank = Time.now
-    print_started(@first_unblank)
     fix_days_gap unless new_week?(Time.now)
     fire :new_day,
          first_unblank: @first_unblank
@@ -108,25 +111,6 @@ class TimeTracker
     @current_week = DateTimeUtils.week_number(Time.now)
     fix_first_week_day
     fire :new_week
-  end
-
-  def print_started(first_unblank)
-    first_unblank_str = first_unblank.strftime('%H:%M')
-    date_str = first_unblank.strftime('%d.%m')
-    File.open(@report_file, 'a') do |file|
-      file.write("#{date_str}    Started: #{first_unblank_str}    ")
-    end
-  end
-
-  def print_finished(first_unblank, last_lock, total_per_week)
-    last_lock_str = last_lock.strftime('%H:%M')
-    delta_str = DateTimeUtils.time_delta_str(last_lock, first_unblank)
-    total_per_week_str = DateTimeUtils.time_delta_str(total_per_week)
-    File.open(@report_file, 'a') do |file|
-      file.puts("Finished: #{last_lock_str}    "\
-                "Delta: #{delta_str}    "\
-                "Total per week: #{total_per_week_str}")
-    end
   end
 
   def today_limit

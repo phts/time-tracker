@@ -3,6 +3,7 @@
 require 'optparse'
 require 'time'
 require_relative 'lib/date_time_utils'
+require_relative 'lib/file_reporter'
 require_relative 'lib/time_tracker'
 
 options = OptionParser.new do |opts|
@@ -92,6 +93,19 @@ if @verbose
     puts "skip day gap: #{data[:days_gap]}"
     puts "actual working days of a week = #{data[:actual_working_days]}"
   end
+end
+
+file_reporter = FileReporter.new(REPORT_FILE)
+time_tracker.on :run do |data|
+  file_reporter.print_started(data[:first_unblank])
+end
+time_tracker.on :before_new_day do |data|
+  file_reporter.print_finished(data[:first_unblank],
+                               data[:last_lock],
+                               data[:total_per_week])
+end
+time_tracker.on :new_day do |data|
+  file_reporter.print_started(data[:first_unblank])
 end
 
 time_tracker.start_notifications
