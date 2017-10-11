@@ -3,6 +3,7 @@
 require 'optparse'
 require 'time'
 require_relative 'lib/date_time_utils'
+require_relative 'lib/time_tracker'
 
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
@@ -54,7 +55,6 @@ unless REPORT_FILE
   exit 1
 end
 
-require_relative 'lib/time_tracker'
 time_tracker = TimeTracker.new(REPORT_FILE,
                                dynamic: @dynamic,
                                initial_first_unblank: @initial_first_unblank,
