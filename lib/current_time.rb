@@ -5,13 +5,13 @@ class CurrentTime
     @file_name = file_name
   end
 
-  def value
-    File.read(@file_name).strip
+  def seconds
+    DateTimeUtils.to_seconds(File.read(@file_name).strip)
   end
 
-  def value=(val)
+  def seconds=(val)
     File.open(@file_name, 'w') do |file|
-      file.puts(DateTimeUtils.time_delta_str(val).to_s)
+      file.puts(DateTimeUtils.time_delta_str(val))
     end
   end
 end

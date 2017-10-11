@@ -64,7 +64,7 @@ current_time = CurrentTime.new(CURRENT_TIME_FILE)
 
 if @genmon
   require_relative 'lib/genmon'
-  puts Genmon.new(current_time.value).progress
+  puts Genmon.new(current_time.seconds).progress
   exit
 end
 
@@ -118,7 +118,7 @@ time_tracker.on :go_home do
   screen_notifier.notify
 end
 time_tracker.on :refresh_current_time do |data|
-  current_time.value = data[:current_time_sec]
+  current_time.seconds = data[:current_time_sec]
 end
 
 time_tracker.start_notifications
