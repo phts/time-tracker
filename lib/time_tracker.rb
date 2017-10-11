@@ -7,12 +7,8 @@ require_relative 'date_time_utils'
 class TimeTracker
   include Watchable
 
-  attr_reader :current_time_file
-
-  def initialize(report_file, options)
-    @notification = options[:notification] || 'Go home!'
+  def initialize(options)
     @dynamic = options[:dynamic]
-
     @last_lock = Time.now
     @first_unblank = options[:initial_first_unblank] || @last_lock
     @current_week = DateTimeUtils.week_number(@last_lock)
@@ -24,12 +20,12 @@ class TimeTracker
       @total_per_week = 0
       fix_first_week_day
     end
-    @current_time_file = "#{report_file}.current"
   end
 
   def run
     fire :run,
          first_unblank: @first_unblank
+    start_refresh_current_time
     BashUtils.watch_xscreensaver_command do |line|
       process_line(line)
     end
@@ -46,14 +42,23 @@ class TimeTracker
 
   private
 
+  def start_refresh_current_time
+    Thread.fork do
+      loop do
+        delta = Time.now - @first_unblank
+        fire :refresh_current_time,
+             current_time_sec: delta
+        sleep Config::REFRESH_CURRENT_TIME_INTERVAL
+      end
+    end
+  end
+
   def process_notifications_loop
     delta = Time.now - @first_unblank
-    File.open(@current_time_file, 'w') do |file|
-      file.puts(DateTimeUtils.time_delta_str(delta).to_s)
-    end
-    if delta >= (lim = today_limit) &&
+    lim = today_limit
+    if delta >= lim &&
        delta < lim + Config::REFRESH_CURRENT_TIME_INTERVAL
-      BashUtils.notify(@notification)
+      fire :go_home
     end
   end
 

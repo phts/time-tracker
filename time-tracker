@@ -2,9 +2,12 @@
 
 require 'optparse'
 require 'time'
+require_relative 'lib/bash_utils'
+require_relative 'lib/current_time'
 require_relative 'lib/date_time_utils'
 require_relative 'lib/file_reporter'
 require_relative 'lib/time_tracker'
+require_relative 'lib/screen_notifier'
 
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
@@ -56,17 +59,21 @@ unless REPORT_FILE
   exit 1
 end
 
-time_tracker = TimeTracker.new(REPORT_FILE,
-                               dynamic: @dynamic,
-                               initial_first_unblank: @initial_first_unblank,
-                               initial_total_per_week: @initial_total_per_week,
-                               notification: @notification)
+CURRENT_TIME_FILE = "#{REPORT_FILE}.current".freeze
+current_time = CurrentTime.new(CURRENT_TIME_FILE)
 
 if @genmon
   require_relative 'lib/genmon'
-  puts Genmon.new(time_tracker.current_time_file).progress
+  puts Genmon.new(current_time.value).progress
   exit
 end
+
+time_tracker = TimeTracker.new(dynamic: @dynamic,
+                               initial_first_unblank: @initial_first_unblank,
+                               initial_total_per_week: @initial_total_per_week)
+
+file_reporter = FileReporter.new(REPORT_FILE)
+screen_notifier = ScreenNotifier.new(@notification)
 
 if @verbose
   time_tracker.on :new_xscreensaver_command do |data|
@@ -95,7 +102,6 @@ if @verbose
   end
 end
 
-file_reporter = FileReporter.new(REPORT_FILE)
 time_tracker.on :run do |data|
   file_reporter.print_started(data[:first_unblank])
 end
@@ -106,6 +112,13 @@ time_tracker.on :before_new_day do |data|
 end
 time_tracker.on :new_day do |data|
   file_reporter.print_started(data[:first_unblank])
+end
+
+time_tracker.on :go_home do
+  screen_notifier.notify
+end
+time_tracker.on :refresh_current_time do |data|
+  current_time.value = data[:current_time_sec]
 end
 
 time_tracker.start_notifications
