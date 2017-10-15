@@ -20,7 +20,7 @@ This script should be run during the whole session so it can be executed from *.
 
 To run the script from terminal emulator:
 
-    time-tracker.rb ~/time.txt
+    time-tracker ~/time.txt
 
 It generates a report file (in this case *~/time.txt*), for example:
 
@@ -34,13 +34,13 @@ And it is used by Generic Monitor plugin.
 
 For more information about options:
 
-    time-tracker.rb --help
+    time-tracker --help
 
 ## Generic Monitor plugin
 
 Additionally the script can be used with [dnschneid/xfce4-genmon-plugin](https://github.com/dnschneid/xfce4-genmon-plugin) to display a progress bar on the panel.
 
-    time-tracker.rb --genmon ~/time.txt
+    time-tracker --genmon ~/time.txt
 
 ## Notification
 
