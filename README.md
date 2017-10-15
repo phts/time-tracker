@@ -10,6 +10,10 @@ And [Ruby](https://www.ruby-lang.org/en/) (tested on v2.2.3) is needed to be abl
 
 Also it assumes that you do not work at nights and do not turn off your PC.
 
+Before first run all dependencies should be installed:
+
+    bundle install
+
 ## Usage
 
 This script should be run during the whole session so it can be executed from *.profile* file or as a service.
