@@ -1,6 +1,6 @@
 # Working Time Tracker
 
-A simple script to track how much time you spend near the computer at the office.
+A simple script to track how much time you spend near the computer in the office.
 
 ## Requirements
 
@@ -12,7 +12,7 @@ Also it assumes that you do not work at nights and do not turn off your PC.
 
 ## Usage
 
-This script should be run during the whole session so it can me executed from *.profile* file or as a service.
+This script should be run during the whole session so it can be executed from *.profile* file or as a service.
 
 To run the script from terminal emulator:
 
