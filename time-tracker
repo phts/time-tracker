@@ -41,6 +41,11 @@ options = OptionParser.new do |opts|
     @notification = text
   end
 
+  opts.on('--track-teamviewer',
+          'Do not ignore TeamViewer sessions while tracking working time') do
+    @track_teamviewer = true
+  end
+
   opts.on('--verbose', 'Print verbose information') do
     @verbose = true
   end
@@ -70,7 +75,8 @@ end
 
 time_tracker = TimeTracker.new(dynamic: @dynamic,
                                initial_first_unblank: @initial_first_unblank,
-                               initial_total_per_week: @initial_total_per_week)
+                               initial_total_per_week: @initial_total_per_week,
+                               track_teamviewer: @track_teamviewer)
 
 file_reporter = FileReporter.new(REPORT_FILE)
 screen_notifier = ScreenNotifier.new(@notification)

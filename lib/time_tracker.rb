@@ -9,6 +9,7 @@ class TimeTracker
 
   def initialize(options)
     @dynamic = options[:dynamic]
+    @track_teamviewer = options[:track_teamviewer]
     @last_lock = Time.now
     @first_unblank = options[:initial_first_unblank] || @last_lock
     @current_week = DateTimeUtils.week_number(@last_lock)
@@ -78,7 +79,7 @@ class TimeTracker
   end
 
   def process_lock
-    unless BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer
+    unless ignored_due_to_teamviewer_session?
       @last_lock = Time.now
       fire :lock,
            last_lock: @last_lock
@@ -89,7 +90,7 @@ class TimeTracker
 
   def process_unblank
     return unless @was_locked
-    if BashUtils.teamviewer_session?
+    if ignored_due_to_teamviewer_session?
       @was_unlocked_by_teamviewer = true
       return
     end
@@ -116,6 +117,11 @@ class TimeTracker
     @current_week = DateTimeUtils.week_number(Time.now)
     fix_first_week_day
     fire :new_week
+  end
+
+  def ignored_due_to_teamviewer_session?
+    @track_teamviewer &&
+      (BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer)
   end
 
   def today_limit
