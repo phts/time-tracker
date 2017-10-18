@@ -12,6 +12,11 @@ require_relative 'lib/screen_notifier'
 options = OptionParser.new do |opts|
   opts.banner = "Usage: #{opts.program_name} [options] REPORT_FILE"
 
+  opts.on('--dont-ignore-teamviewer',
+          'Do not ignore TeamViewer sessions while tracking working time') do
+    @dont_ignore_teamviewer = true
+  end
+
   opts.on('-d', '--dynamic',
           'Use dynamic working day limit. Not supported for --genmon.') do
     @dynamic = true
@@ -41,11 +46,6 @@ options = OptionParser.new do |opts|
     @notification = text
   end
 
-  opts.on('--track-teamviewer',
-          'Do not ignore TeamViewer sessions while tracking working time') do
-    @track_teamviewer = true
-  end
-
   opts.on('--verbose', 'Print verbose information') do
     @verbose = true
   end
@@ -73,10 +73,10 @@ if @genmon
   exit
 end
 
-time_tracker = TimeTracker.new(dynamic: @dynamic,
+time_tracker = TimeTracker.new(dont_ignore_teamviewer: @dont_ignore_teamviewer,
+                               dynamic: @dynamic,
                                initial_first_unblank: @initial_first_unblank,
-                               initial_total_per_week: @initial_total_per_week,
-                               track_teamviewer: @track_teamviewer)
+                               initial_total_per_week: @initial_total_per_week)
 
 file_reporter = FileReporter.new(REPORT_FILE)
 screen_notifier = ScreenNotifier.new(@notification)

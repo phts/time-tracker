@@ -8,8 +8,8 @@ class TimeTracker
   include Watchable
 
   def initialize(options)
+    @dont_ignore_teamviewer = options[:dont_ignore_teamviewer]
     @dynamic = options[:dynamic]
-    @track_teamviewer = options[:track_teamviewer]
     @last_lock = Time.now
     @first_unblank = options[:initial_first_unblank] || @last_lock
     @current_week = DateTimeUtils.week_number(@last_lock)
@@ -120,7 +120,7 @@ class TimeTracker
   end
 
   def ignored_due_to_teamviewer_session?
-    return false if @track_teamviewer
+    return false if @dont_ignore_teamviewer
     BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer
   end
 
