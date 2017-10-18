@@ -120,8 +120,8 @@ class TimeTracker
   end
 
   def ignored_due_to_teamviewer_session?
-    @track_teamviewer &&
-      (BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer)
+    return false if @track_teamviewer
+    BashUtils.teamviewer_session? || @was_unlocked_by_teamviewer
   end
 
   def today_limit
