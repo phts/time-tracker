@@ -83,7 +83,7 @@ screen_notifier = ScreenNotifier.new(@notification)
 
 if @verbose
   time_tracker.on :new_xscreensaver_command do |data|
-    puts "#{data[:command]} #{data[:time]}"
+    puts "#{data[:command]}\t#{data[:time]}"
     puts "teamviewer_session? == #{data[:teamviewer_session?]} || "\
          '@was_unlocked_by_teamviewer == '\
          "#{data[:was_unlocked_by_teamviewer].inspect} || "\
