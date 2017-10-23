@@ -1,8 +1,8 @@
 class ScreenNotifier
   DEFAULT_TEXT = 'Go home!'.freeze
 
-  def initialize(text = DEFAULT_TEXT)
-    @text = text
+  def initialize(text = nil)
+    @text = text || DEFAULT_TEXT
   end
 
   def notify
