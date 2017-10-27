@@ -131,7 +131,7 @@ class TimeTracker
   end
 
   def remaining_days_before_weekend
-    6 - @first_unblank.wday
+    Config::WORKING_DAYS_PER_WEEK - @first_unblank.wday + 1
   end
 
   def actual_working_days
