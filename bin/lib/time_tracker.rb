@@ -127,8 +127,15 @@ class TimeTracker
   def today_limit
     return Config::WORKING_DAY_IN_SECONDS unless @dynamic
 
-    days_to_weekend = 6 - @first_unblank.wday
-    (@limit_per_week - @total_per_week).round / days_to_weekend
+    (@limit_per_week - @total_per_week).round / remaining_days_before_weekend
+  end
+
+  def remaining_days_before_weekend
+    6 - @first_unblank.wday
+  end
+
+  def actual_working_days
+    @limit_per_week / Config::WORKING_DAY_IN_SECONDS
   end
 
   def new_day?(date)
@@ -140,10 +147,9 @@ class TimeTracker
   end
 
   def fix_first_week_day
-    days_to_weekend = 6 - @first_unblank.wday
-    @limit_per_week = Config::WORKING_DAY_IN_SECONDS * days_to_weekend
+    @limit_per_week = Config::WORKING_DAY_IN_SECONDS * remaining_days_before_weekend
     fire :fix_first_week_day,
-         actual_working_days: @limit_per_week / Config::WORKING_DAY_IN_SECONDS
+         actual_working_days: actual_working_days
   end
 
   def fix_days_gap
@@ -152,7 +158,7 @@ class TimeTracker
     return unless days_gap > 0
 
     fire :fix_days_gap,
-         actual_working_days: @limit_per_week / Config::WORKING_DAY_IN_SECONDS,
+         actual_working_days: actual_working_days,
          days_gap: days_gap
   end
 end
