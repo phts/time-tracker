@@ -99,8 +99,8 @@ if @verbose
   time_tracker.on :new_week do
     puts 'new week'
   end
-  time_tracker.on :fix_first_week_day do |data|
-    puts "remaining working days of a week = #{data[:actual_working_days]}"
+  time_tracker.on :init_limit_per_week do |data|
+    puts "remaining working days of a week = #{data[:remaining_working_days]}"
   end
   time_tracker.on :fix_days_gap do |data|
     puts "skip day gap: #{data[:days_gap]}"

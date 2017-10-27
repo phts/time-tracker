@@ -13,19 +13,13 @@ class TimeTracker
     @last_lock = Time.now
     @first_unblank = options[:initial_first_unblank] || @last_lock
     @current_week = DateTimeUtils.week_number(@last_lock)
-
-    if options[:initial_total_per_week]
-      @total_per_week = options[:initial_total_per_week]
-      @limit_per_week = Config::WORKING_LIMIT_PER_WEEK
-    else
-      @total_per_week = 0
-      fix_first_week_day
-    end
+    @total_per_week = options[:initial_total_per_week] || 0
   end
 
   def run
     fire :run,
          first_unblank: @first_unblank
+    init_limit_per_week
     start_refresh_current_time
     BashUtils.watch_xscreensaver_command do |line|
       process_line(line)
@@ -115,7 +109,7 @@ class TimeTracker
   def process_new_week
     @total_per_week = 0
     @current_week = DateTimeUtils.week_number(Time.now)
-    fix_first_week_day
+    init_limit_per_week
     fire :new_week
   end
 
@@ -146,10 +140,15 @@ class TimeTracker
     DateTimeUtils.week_number(date) != @current_week
   end
 
-  def fix_first_week_day
-    @limit_per_week = Config::WORKING_DAY_IN_SECONDS * remaining_days_before_weekend
-    fire :fix_first_week_day,
-         actual_working_days: actual_working_days
+  def init_limit_per_week
+    @limit_per_week =
+      if @total_per_week.zero?
+        Config::WORKING_DAY_IN_SECONDS * remaining_days_before_weekend
+      else
+        Config::WORKING_LIMIT_PER_WEEK
+      end
+    fire :init_limit_per_week,
+         remaining_working_days: actual_working_days
   end
 
   def fix_days_gap
