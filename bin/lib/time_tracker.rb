@@ -20,11 +20,14 @@ class TimeTracker
     fire :run,
          first_unblank: @first_unblank
     init_limit_per_week
+    start_notifications
     start_refresh_current_time
     BashUtils.watch_xscreensaver_command do |line|
       process_line(line)
     end
   end
+
+  private
 
   def start_notifications
     Thread.fork do
@@ -34,8 +37,6 @@ class TimeTracker
       end
     end
   end
-
-  private
 
   def start_refresh_current_time
     Thread.fork do

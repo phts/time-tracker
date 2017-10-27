@@ -126,5 +126,4 @@ time_tracker.on :refresh_current_time do |data|
   current_time.seconds = data[:current_time_sec]
 end
 
-time_tracker.start_notifications
 time_tracker.run
