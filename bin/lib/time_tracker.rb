@@ -133,6 +133,12 @@ class TimeTracker
     @limit_per_week / Config::WORKING_DAY_IN_SECONDS
   end
 
+  def to_working_days(seconds)
+    whole_days, rest = seconds.divmod(Config::WORKING_DAY_IN_SECONDS)
+    return whole_days if rest < Config::MINIMAL_WORKING_DAY_IN_SECONDS
+    whole_days + 1
+  end
+
   def new_day?(date)
     date.strftime('%Y-%m-%d') != @last_lock.strftime('%Y-%m-%d')
   end
@@ -143,11 +149,8 @@ class TimeTracker
 
   def init_limit_per_week
     self.limit_per_week =
-      if @total_per_week.zero?
-        Config::WORKING_DAY_IN_SECONDS * remaining_days_before_weekend
-      else
-        Config::WORKING_LIMIT_PER_WEEK
-      end
+      Config::WORKING_DAY_IN_SECONDS *
+      (remaining_days_before_weekend + to_working_days(@total_per_week))
   end
 
   def fix_days_gap
@@ -163,6 +166,6 @@ class TimeTracker
   def limit_per_week=(value)
     @limit_per_week = value
     fire :set_limit_per_week,
-         remaining_working_days: actual_working_days
+         actual_working_days: actual_working_days
   end
 end
